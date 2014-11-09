@@ -79,7 +79,7 @@ False || x = x
 -------------------------------------------
 -- Натуральные числа
 
-data Nat = Zero | Succ Nat deriving (Show,Read)
+data Nat = Zero | Succ Nat deriving (Show, Read)
 
 natZero = Zero     -- 0
 natOne = Succ Zero -- 1
@@ -156,58 +156,88 @@ intNeg (Pos n) = Neg n
 
 -- Дальше также как для натуральных
 intCmp :: Int -> Int -> Tri
-intCmp = undefined
+intCmp IntZero IntZero = EQ
+intCmp (Pos n) (Pos m) = natCmp n m
+intCmp (Neg n) (Neg m) = natCmp m n
+intCmp (Neg _) IntZero = LT
+intCmp (Neg _) (Pos _) = LT
+intCmp IntZero (Pos _) = LT
+intCmp _ _ = GT
 
 intEq :: Int -> Int -> Bool
-intEq = undefined
+intEq IntZero IntZero = True
+intEq (Pos n) (Pos m) = natEq n m
+intEq (Neg n) (Neg m) = natEq n m
+intEq _ _ = False
 
 intLt :: Int -> Int -> Bool
-intLt = undefined
+intLt IntZero (Pos _) = True
+intLt (Neg _) IntZero = True
+intLt (Neg _) (Pos _) = True
+intLt (Pos n) (Pos m) = natLt n m
+intLt (Neg n) (Neg m) = natLt m n
+intLt _ _ = False
 
 infixl 6 .+., .-.
 -- У меня это единственный страшный терм во всём файле
 (.+.) :: Int -> Int -> Int
-n .+. m = undefined
+IntZero .+. m = m
+(Pos n) .+. (Pos m) = Pos (n +. m +. natOne)
+(Neg n) .+. (Neg m) = Neg (n +. m +. natOne)
+(Pos n) .+. (Neg m) = 
+	case x of
+		EQ -> IntZero
+		LT -> Neg (m -. n -. natOne)
+		GT -> Pos (n -. m -. natOne)
+	where
+		x = natCmp n m
+n .+. m = m .+. n
 
 (.-.) :: Int -> Int -> Int
 n .-. m = n .+. (intNeg m)
 
 infixl 7 .*.
 (.*.) :: Int -> Int -> Int
-n .*. m = undefined
+IntZero .*. _ = IntZero
+(Pos n) .*. (Pos m) = Pos ((n +. natOne) *. (m +. natOne) -. natOne)
+(Pos n) .*. (Neg m) = Neg ((n +. natOne) *. (m +. natOne) -. natOne)
+(Neg n) .*. (Neg m) = Pos ((n +. natOne) *. (m +. natOne) -. natOne)
+n .*. m = m .*. n
 
 -------------------------------------------
 -- Рациональные числа
 
-data Rat = Rat Int Nat
+data Rat = Rat Int Nat deriving (Show, Read)
 
 ratNeg :: Rat -> Rat
 ratNeg (Rat x y) = Rat (intNeg x) y
 
 -- У рациональных ещё есть обратные элементы
 ratInv :: Rat -> Rat
-ratInv = undefined
+ratInv (Rat IntZero _) = error "Division by zero"
+ratInv (Rat (Pos x) y) = Rat (Pos $ y -. natOne) (x +. natOne)
+ratInv (Rat (Neg x) y) = Rat (Neg $ y -. natOne) (x +. natOne)
 
 -- Дальше как обычно
 ratCmp :: Rat -> Rat -> Tri
-ratCmp = undefined
+ratCmp (Rat x1 y1) (Rat x2 y2) = intCmp (x1 .*. (Pos $ y2 -. natOne)) (x2 .*. (Pos $ y1 -. natOne))
 
 ratEq :: Rat -> Rat -> Bool
-ratEq = undefined
+ratEq (Rat x1 y1) (Rat x2 y2) = intEq (x1 .*. (Pos $ y2 -. natOne)) (x2 .*. (Pos $ y1 -. natOne))
 
 ratLt :: Rat -> Rat -> Bool
-ratLt = undefined
+ratLt (Rat x1 y1) (Rat x2 y2) = intLt (x1 .*. (Pos $ y2 -. natOne)) (x2 .*. (Pos $ y1 -. natOne))
 
 infixl 7 %+, %-
 (%+) :: Rat -> Rat -> Rat
-n %+ m = undefined
+(Rat x1 y1) %+ (Rat x2 y2) = Rat ((x1 .*. (Pos $ y2 -. natOne)) .+. (x2 .*. (Pos $ y1 -. natOne))) (y1 *. y2)
 
 (%-) :: Rat -> Rat -> Rat
 n %- m = n %+ (ratNeg m)
 
 infixl 7 %*, %/
 (%*) :: Rat -> Rat -> Rat
-n %* m = undefined
+(Rat x1 y1) %* (Rat x2 y2) = Rat (x1 .*. x2) (y1 *. y2)
 
 (%/) :: Rat -> Rat -> Rat
 n %/ m = n %* (ratInv m)

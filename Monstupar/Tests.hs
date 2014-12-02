@@ -38,8 +38,16 @@ balParTest = mustParse ""
 
 -- Список натуральных чисел
 -- тут следует использовать класс Read
+
+natParser :: Monstupar Char Integer
+natParser = (many1 $ oneOf ['0'..'9']) >>= (return . read)
+
 natList :: Monstupar Char [Integer]
-natList = undefined
+natList = do
+    fst <- natParser
+    others <- many $ char ',' >> natParser
+    eof
+    return $ fst:others
 
 natListTest = mustFail  ""
           &.& mustParse "0"

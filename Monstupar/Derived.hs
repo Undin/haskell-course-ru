@@ -21,16 +21,23 @@ char = like . (==)
 
 -- В голове ввода сейчас что-то из списка
 oneOf :: Eq s => [s] -> Monstupar s s
-oneOf = undefined
+oneOf xs = like (\x -> elem x xs)
 
 -- В префиксе головы сейчас нечто вполне определённое
 string :: Eq s => [s] -> Monstupar s [s]
-string = undefined
+string [] = return []
+string (x:xs) = do
+	y <- char x
+	ys <- string xs
+	return $ y:ys
 
 -- "Звёздочка" -- запустить парсер максимальное (ноль или более) число раз и
 -- саккумулировать результыты
 many :: Monstupar s a -> Monstupar s [a]
-many p = undefined
+many p = (do
+	x <- p
+	xs <- many p
+	return $ x:xs) <|> return []
 -- Аккуратно с реализацией! Следите за тем, чтобы у вас из-за использования <|>
 -- не рос в бесконечность стек.
 
@@ -43,5 +50,7 @@ many1 p = do
 
 -- "Вопросик" -- ноль или один раз
 optional :: Monstupar s a -> Monstupar s (Maybe a)
-optional = undefined
+optional p = (do
+	x <- p
+	return $ Just x) <|> return Nothing
 

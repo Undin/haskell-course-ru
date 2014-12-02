@@ -252,6 +252,9 @@ f . g = \ x -> f (g x)
 infixr 0 $
 f $ x = f x
 
+id :: a -> a
+id x = x
+
 -- Эквивалентные определения
 example3   a b c = gcd a (gcd b c)
 example3'  a b c = gcd a $ gcd b c

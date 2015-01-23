@@ -125,7 +125,13 @@ subsequences (Cons x xs) = let p = (subsequences xs) in p ++ (map (Cons x) p)
 
 -- (*) Все перестановки элементов данного списка
 permutations :: List a -> List (List a)
-permutations = undefined
+permutations Nil = Cons Nil Nil
+permutations xs = permutations'' Nil xs
+	where
+		permutations'' _ Nil = Nil
+		permutations'' ys z@(Cons x xs) = (permutations''' (z ++ ys)) ++ permutations'' (ys ++ Cons x Nil) xs
+		permutations'''  Nil = Nil
+		permutations''' (Cons x xs) = map (Cons x) $ permutations xs
 
 -- (*) Если можете. Все перестановки элементов данного списка
 -- другим способом
